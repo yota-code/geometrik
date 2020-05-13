@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import math
 import cmath
 
@@ -28,13 +30,13 @@ class _common_Point_Vector() :
 		return cmath.phase(self.as_complex)
 
 class Point(_common_Point_Vector) :
-	def dist(self, other) :
+	def dist(self, other: Point) :
 		return math.sqrt( (self.x - other.x)**2 + (self.y - other.y)**2 )
 
 	def __repr__(self) :
-		return f"Point({self.x}, {self.y})"
+		return f"Point({self.x:0.3g}, {self.y:0.3g})"
 
-	def projection(self, line) :
+	def projection(self, line: Line) :
 		op = Vector.from_2_Point(line.b, self)
 		k = (op * line.a) / (line.a.norm_2)
 		return line.b + k * line.a
@@ -44,12 +46,15 @@ class Point(_common_Point_Vector) :
 
 	def __sub__(self, other) :
 		return Point(self.x - other.x, self.y - other.y)
+
+	def _to_path(self) :
+		return f"M {self.x:0.3f},{self.y:0.3f}"	
 		
 class Vector(_common_Point_Vector) :
 	""" floating vector class """
 
 	def __repr__(self) :
-		return f"Vector({self.x}, {self.y})"
+		return f"Vector({self.x:0.3g}, {self.y:0.3g})"
 
 	@property
 	def norm_2(self) :
@@ -128,7 +133,7 @@ class Line() :
 	@property
 	def get_canonical_coef(self) :
 		a = self.a.y
-		b = self.a.x
+		b = -self.a.x
 		c = self.a.x * self.b.y - self.a.y * self.b.x
 		return a, b, c
 
@@ -138,14 +143,19 @@ class Line() :
 
 	def intersection_with_line(self, other) :
 		# print(f">>> intersection({self.debug_canonical()}, {other.debug_canonical()}")
-		d = self.a @ other.a
-		p = Vector.from_2_Point(self.b, other.b)
+		a1, b1, c1 = self.get_canonical_coef
+		a2, b2, c2 = other.get_canonical_coef
+
+		d = a1*b2 - a2*b1
+
 		if d != 0 :
-			t = (other.a.y*(p.x) + other.a.x*(p.y)) / d
-			return self.value_at_time(t)
+			y = ( a2*c1 - a1*c2 ) / d
+			x = ( b1*c2 - c1*b2 ) / d
+			return Point(x, y)
+
 		return None
 
-	def intersection_with_circle(self, other) :
+	def intersection_with_circle(self, other: Circle) -> (Point, Point) :
 		# https://mathworld.wolfram.com/Circle-LineIntersection.html
 		# first, lets check the line can intersect
 
@@ -178,6 +188,7 @@ class Line() :
 
 	@staticmethod
 	def from_2_Point(p1: Point, p2: Point) :
+		""" return a Line which pass through two points """
 		return Line(
 			Vector.from_2_Point(p1, p2),
 			p1
@@ -185,26 +196,42 @@ class Line() :
 
 	@staticmethod
 	def from_originPoint_normalVector(origin: Point, normal: Vector) :
+		""" return a Line defined by a point it passes through and a normal vector """
 		return Line(
 			Vector( -normal.y, normal.x ),
 			origin
 		)
 		
 class Segment() :
-	def __init__(self, p1, p2) :
-		self.p1 = p1
-		self.p2 = p2
+	""" define a segment between A and B, the segment is oriented """
+	def __init__(self, a: Point, b: Point) :
+		self.a = a
+		self.b = b
+
+	def __repr__(self) :
+		return f"Segment({self.a}, {self.b})"
+
+	def get_point_at(self, i) :
+		""" i must be in [0.0 ; 1.0] """
+		return Point(
+			(1.0 - i) * self.a.x + i * self.b.x,
+			(1.0 - i) * self.a.y + i * self.b.y,
+		)
+
 		
 	def _to_svg(self) :
-		return f'<line x1="{self.p1.x:.3f}" y1="{self.p1.y:.3f}" x2="{self.p2.x:.3f}" y2="{self.p2.y:.3f}" />'
+		return f'<line x1="{self.a.x:.3f}" y1="{self.a.y:.3f}" x2="{self.b.x:.3f}" y2="{self.b.y:.3f}" />'
 
-	@property
-	def middle(self) :
-		return Point( (self.p1.x + self.p2.x) / 2, (self.p1.y + self.p2.y) / 2 )
+	def _to_path(self, standalone=True) :
+		return ( f"M {self.a.x},{self.a.y} " if standalone else '') + f"L {self.b.x:0.3f},{self.b.y:0.3f}"
 
 	@property
 	def as_vector(self) :
-		return Vector.from_2_Point(self.p1, self.p2)
+		return Vector.from_2_Point(self.a, self.b)
+
+	@property
+	def reversed(self) :
+		return Segment(self.b, self.a)
 
 class Circle() :
 	def __init__(self, c: Point, r: float) :
@@ -250,28 +277,33 @@ class Circle() :
 
 	@staticmethod
 	def from_3_Point(a: Point, b: Point, c: Point) :
+		# print(f'>>> Circle.from_3_Point({a}, {b}, {c})')
+
 		s_ab = Segment(a, b)
 		s_bc = Segment(b, c)
-
-		m_ab = s_ab.middle
-		m_bc = s_bc.middle
+		
+		m_ab = s_ab.get_point_at(0.5)
+		m_bc = s_bc.get_point_at(0.5)
 
 		l_ab = Line.from_originPoint_normalVector(m_ab, s_ab.as_vector)
 		l_bc = Line.from_originPoint_normalVector(m_bc, s_bc.as_vector)
 
-		c = l_ab.intersection_with_line(l_bc)
-		r = c.dist(b)
+		o = l_ab.intersection_with_line(l_bc)
 
-		return Circle(c, r)
+		r = o.dist(b)
+
+		return Circle(o, r)
 
 	@staticmethod
 	def from_2_Point(a: Point, b: Point, w: float) :
 		""" w is the signed inverse of the radius """
+		# print(f'>>> Circle.from_3_Point({a}, {b}, {w})')
+
 		if w == 0 :
 			return Line.from_2_Point(a, b)
 
-		r = 1/w
-		m = Segment(a, b).middle
+		r = 1/abs(w)
+		m = Segment(a, b).get_point_at(0.5)
 		line = Line.from_originPoint_normalVector(m, Vector.from_2_Point(a, b))
 
 		circle = Circle(a, r)
@@ -282,17 +314,20 @@ class Circle() :
 		aq = Vector.from_2_Point(a, q)
 
 		if 0 <= w * (ab @ ap) :
-			return Circle(p, r)
-		else :
 			return Circle(q, r)
-
+		else :
+			return Circle(p, r)
 
 class Arc() :
-	def __init__(self, c, r, start, stop) :
+	def __init__(self, c, w, start, stop) :
 		self.c = c # center as Point()
-		self.r = r # self.rdius as float()
+		self.w = w # curvature as float()
 		self.start = start
 		self.stop = stop
+
+	@property
+	def reversed(self) :
+		return Arc(self.c, - self.w, self.stop, self.start)
 		
 	@staticmethod
 	def from_3_Point(a: Point, b: Point, c: Point) :
@@ -301,10 +336,9 @@ class Arc() :
 		start = Vector.from_2_Point(tmp.c, a).phase
 		stop = Vector.from_2_Point(tmp.c, c).phase
 
-		return Arc(tmp.c, tmp.r, start, stop)
+		return Arc(tmp.c, math.copysign(1.0, Vector.from_2_Point(a, b) @ Vector.from_2_Point(b, c)) / tmp.r, start, stop)
 
 	def from_2_Point(a: Point, b: Point, w: float) :
-		
 		""" w is the signed inverse of the radius """
 		if w == 0 :
 			return Segment.from_2_Point(a, b)
@@ -314,35 +348,51 @@ class Arc() :
 		start = Vector.from_2_Point(tmp.c, a).phase
 		stop = Vector.from_2_Point(tmp.c, b).phase
 
-		return Arc(tmp.c, tmp.r, start, stop)
-
-
-		r = 1/w
-		m = Segment(a, b).middle
-		line = Line.from_originPoint_normalVector(m, Vector.from_2_Point(a, b))
-
-		circle = Circle(a, r)
-		p, q = line.intersection_with_circle(circle) # one point is on the left, one on the right
-
-		ab = Vector.from_2_Point(a, b)
-		ap = Vector.from_2_Point(a, p)
-		aq = Vector.from_2_Point(a, q)
-
-		if 0 <= w * (ab @ ap) :
-			return Circle(p, r)
-		else :
-			return Circle(q, r)
-
+		return Arc(tmp.c, 1.0 / tmp.r, start, stop)
 
 	def __repr__(self) :
-		return f"Arc(center = {self.c}, radius = {self.r:.3f}, start = {self.start:.3f}, stop = {self.stop:.3f})"
+		return f"Arc(center = {self.c}, curvature = {self.w:.3g}, start = {self.start:.3f}, stop = {self.stop:.3f})"
+
+	def get_point_at(self, i) :
+		""" i must be in [0.0 ; 1.0] """
+		m = (1.0 - i) * self.start + i * self.stop
+		return Point(
+			self.c.x + math.cos(m) / abs(self.w),
+			self.c.y + math.sin(m) / abs(self.w)
+		)
+
+	def _to_path(self, standalone=True) :
+		m = ( f"M {self.get_point_at(0.0).x},{self.get_point_at(0.0).y} " if standalone else '')
+		r = 1 / abs(self.w)
+		p = self.get_point_at(1.0)
+		return f"A {r:0.3f} {r:0.3f} 0 0 {'1' if 0 < self.w else '0'} {p.x:0.3f} {p.y:0.3f}"
 
 if __name__ == '__main__' :
 
+	import sympy
+	from sympy import symbols as sym
+
+
+	l1 = Line.from_originPoint_normalVector(Point(4,1), Vector(4,-2))
+	l2 = Line.from_originPoint_normalVector(Point(1,5), Vector(2,-6))
+
+	print(l1)
+	print(l1.debug_canonical())
+	print(l2.debug_canonical())
+
+	a1, a2, b1, b2, c1, c2 = sym('a_1 a_2 b_1 b_2 c_1 c_2')
+	a1x, a1y, b1x, b1y, a2x, a2y, b2x, b2y = sym('a^1_x a^1_y b^1_x b^1_y a^2_x a^2_y b^2_x b^2_y')
+
+	y = (a2*c1 - a1*c2) / (a1*b2 - a2*b1)
+	print(sympy.latex(
+		y.subs(a1, a1y).subs(a2, a2y).subs(b1, -a1x).subs(b2, -a2x).subs(c1, a1x*b1y - a1y*b1x).subs(c2, a2x*b2y - a2y*b2x))
+	)
+	print(l1.intersection_with_line(l2))
+
+	sys.exit(0)
 
 	Arc.from_2_Point(Point(-2,2), Point(2,2), 1/5)
 
-	sys.exit(0)
 
 	line_o = Line.from_2_Point(Point(-1, 0), Point(5, 3))
 	circle_o = Circle(Point(2,2), 1)
