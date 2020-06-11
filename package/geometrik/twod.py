@@ -48,7 +48,14 @@ class Point(_common_Point_Vector) :
 		return Point(self.x - other.x, self.y - other.y)
 
 	def _to_path(self) :
-		return f"M {self.x:0.3f},{self.y:0.3f}"	
+		return f"M {self.x:0.3f},{self.y:0.3f}"
+
+	def to_svg(self) :
+		return '\n'.join([
+			f'<line x1="{self.x-2}" y1="{self.y-2}" x2="{self.x+2}" y2="{self.y+2}"/>',
+			f'<line x1="{self.x-2}" y1="{self.y+2}" x2="{self.x+2}" y2="{self.y-2}"/>',
+		])
+
 		
 class Vector(_common_Point_Vector) :
 	""" floating vector class """
@@ -93,13 +100,37 @@ class Vector(_common_Point_Vector) :
 		return Vector(self.x - other.x, self.y - other.y)
 
 class Polyline() :
-	def __init__(self, p_lst, is_closed=False) :
+	def __init__(self, p_lst) :
 		self.p_lst = p_lst
-		self.is_closed = is_closed
 		
 	def _to_svg(self) :
 		return '<{0} points="{1}" />'.format(
 			"polygon" if self.is_closed else "polyline",
+			' '.join(f"{p.x:.3f},{p.y:.3f}" for p in self.p_lst)
+		)
+
+class Polygon() :
+	def __init__(self, * p_lst) :
+		self.p_lst = p_lst
+
+	def is_point_inside(self, m) :
+		c = 0
+		for i in range(len(self.p_lst)) :
+			a = self.p_lst[i-1]
+			b = self.p_lst[i]
+			if a.y <= m.y <= b.y or b.y <= m.y <= a.y :
+				if b.y - a.y == 0 :
+					print(a, b)
+					c += 1
+				else :
+					r = ( m.y - a.y ) / ( b.y - a.y )
+					x = a.x + r * ( b.x - a.x )
+					if m.x <= x :
+						c += 1
+		return c % 2 == 1
+
+	def to_svg(self) :
+		return '<polygon points="{0}" />'.format(
 			' '.join(f"{p.x:.3f},{p.y:.3f}" for p in self.p_lst)
 		)
 
@@ -217,7 +248,6 @@ class Segment() :
 			(1.0 - i) * self.a.x + i * self.b.x,
 			(1.0 - i) * self.a.y + i * self.b.y,
 		)
-
 		
 	def _to_svg(self) :
 		return f'<line x1="{self.a.x:.3f}" y1="{self.a.y:.3f}" x2="{self.b.x:.3f}" y2="{self.b.y:.3f}" />'
@@ -268,7 +298,7 @@ class Circle() :
 			)
 		)
 
-	def _to_svg(self, style=None) :
+	def to_svg(self, style=None) :
 		style = '' if style is None else f'class="{style}" '
 		return f'<circle {style}cx="{self.c.x}" cy="{self.c.y}" r="{self.r}" />'
 
