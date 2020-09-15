@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from __future__ import annotations
+# from __future__ import annotations
 
 import math
 import cmath
@@ -30,13 +30,13 @@ class _common_Point_Vector() :
 		return cmath.phase(self.as_complex)
 
 class Point(_common_Point_Vector) :
-	def dist(self, other: Point) :
+	def dist(self, other: "Point") :
 		return math.sqrt( (self.x - other.x)**2 + (self.y - other.y)**2 )
 
 	def __repr__(self) :
 		return f"Point({self.x:0.3g}, {self.y:0.3g})"
 
-	def projection(self, line: Line) :
+	def projection(self, line: "Line") :
 		op = Vector.from_2_Point(line.b, self)
 		k = (op * line.a) / (line.a.norm_2)
 		return line.b + k * line.a
@@ -52,10 +52,9 @@ class Point(_common_Point_Vector) :
 
 	def to_svg(self) :
 		return '\n'.join([
-			f'<line x1="{self.x-2}" y1="{self.y-2}" x2="{self.x+2}" y2="{self.y+2}"/>',
-			f'<line x1="{self.x-2}" y1="{self.y+2}" x2="{self.x+2}" y2="{self.y-2}"/>',
+			f'<line x1="{self.x-2:.3f}" y1="{self.y-2:.3f}" x2="{self.x+2:.3f}" y2="{self.y+2:.3f}"/>',
+			f'<line x1="{self.x-2:.3f}" y1="{self.y+2:.3f}" x2="{self.x+2:.3f}" y2="{self.y-2:.3f}"/>',
 		])
-
 		
 class Vector(_common_Point_Vector) :
 	""" floating vector class """
@@ -69,7 +68,7 @@ class Vector(_common_Point_Vector) :
 
 	@property
 	def norm(self) :
-		return math.sqrt( (self.x)**2 + (self.y)**2 )
+		return math.sqrt( self.norm_2 )
 		
 	@staticmethod
 	def from_2_Point(a: Point, b: Point) :
@@ -86,6 +85,7 @@ class Vector(_common_Point_Vector) :
 		return self.x*other.y - self.y*other.x
 
 	def __mul__(self, other) :
+		''' compute the scalar product between two vectors, or the multiplication by a constant '''
 		if isinstance(other, Vector) :
 			return self.x*other.x + self.y*other.y
 		else :
@@ -186,7 +186,7 @@ class Line() :
 
 		return None
 
-	def intersection_with_circle(self, other: Circle) -> (Point, Point) :
+	def intersection_with_circle(self, other: "Circle") -> ("Point", "Point") :
 		# https://mathworld.wolfram.com/Circle-LineIntersection.html
 		# first, lets check the line can intersect
 
@@ -235,7 +235,7 @@ class Line() :
 		
 class Segment() :
 	""" define a segment between A and B, the segment is oriented """
-	def __init__(self, a: Point, b: Point) :
+	def __init__(self, a: "Point", b: "Point") :
 		self.a = a
 		self.b = b
 
@@ -244,9 +244,10 @@ class Segment() :
 
 	def get_point_at(self, i) :
 		""" i must be in [0.0 ; 1.0] """
+		u = self.b - self.a
 		return Point(
-			(1.0 - i) * self.a.x + i * self.b.x,
-			(1.0 - i) * self.a.y + i * self.b.y,
+			self.a.x + i * u.x,
+			self.a.y + i * u.y,
 		)
 		
 	def _to_svg(self) :
@@ -282,6 +283,8 @@ class Circle() :
 		
 	def outside_tangent(self, other) :
 		""" return the two segments which form the tangent to the two circles self and other """
+
+		ab = Vector(a, b)
 		
 		gamma = ab.phase
 		delta = math.asin((other.r - self.r) / len(ab))
@@ -300,7 +303,7 @@ class Circle() :
 
 	def to_svg(self, style=None) :
 		style = '' if style is None else f'class="{style}" '
-		return f'<circle {style}cx="{self.c.x}" cy="{self.c.y}" r="{self.r}" />'
+		return f'<circle {style}cx="{self.c.x:.5g}" cy="{self.c.y:.5g}" r="{self.r:.5g}" />'
 
 	def __repr__(self) :
 		return f"Cercle({self.c}, {self.r})"
