@@ -19,6 +19,7 @@ class Quaternion() :
 		self.x = x
 		self.y = y
 		self.z = z
+		
 		self._is_unit = is_unit
 	
 	@staticmethod
