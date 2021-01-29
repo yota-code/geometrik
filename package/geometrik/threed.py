@@ -14,7 +14,7 @@ class Point() :
 		return self.x, self.y, self.z
 
 	@staticmethod
-	def origin(self) :
+	def origin() :
 		return Point(0.0, 0.0, 0.0)
 
 	def __repr__(self) :
