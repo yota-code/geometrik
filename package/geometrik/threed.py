@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 import math
+import sympy
+
+import IPython.display
+
 
 class Point() :
 	""" a Point is also a vector initiating at the origin """
@@ -18,10 +22,17 @@ class Point() :
 		return Point(0.0, 0.0, 0.0)
 
 	def __repr__(self) :
-		return f"Point({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
+		try :
+			return f"Point({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
+		except TypeError :
+			s = f"Point({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
+			return s
 
 	def __sub__(self, other) :
 		return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
+
+	def subs(self, ** nam) :
+		return Point(self.x.subs(nam), self.y.subs(nam), self.z.subs(nam))
 
 class Vector(Point) :
 	def __init__(self, x, y, z, is_unit=False) :
@@ -30,6 +41,9 @@ class Vector(Point) :
 		self.z = z
 
 		self._is_unit = is_unit
+
+	def __iter__(self) :
+		return (i for i in (self.x, self.y, self.z))
 				
 	def __add__(self, other) :
 		if isinstance(other, Point) :
@@ -42,10 +56,11 @@ class Vector(Point) :
 	def __mul__(self, other) :
 		if isinstance(other, Vector) :
 			return self.scalar_product(other)
-		elif isinstance(other, (int, float,)) :
-			return self.lambda_product(other)
+		#elif isinstance(other, (int, float, sympy.core.symbol.Symbol,)) :
+		#	return self.lambda_product(other)
 		else :
-			raise ValueError("operation not implemented for this type: {0!r}".format(other))
+			return self.lambda_product(other)
+		#	raise ValueError("operation not implemented for this type: {0!r}".format(other))
 			
 	__rmul__ = __mul__
 	
@@ -80,7 +95,7 @@ class Vector(Point) :
 		return Vector(
 			self.y * other.z - self.z * other.y,
 			self.z * other.x - self.x * other.z,
-			self.x * other.y - self.y * other.x
+			self.x * other.y - self.y * other.x,
 		)
 		
 	def __str__(self) :
@@ -88,19 +103,31 @@ class Vector(Point) :
 		
 	@property
 	def norm(self) :
-		return math.sqrt(self.norm_2)
+		try :
+			return math.sqrt(self.norm_2)
+		except TypeError :
+			return sympy.sqrt(self.norm_2)
 
 	@property
 	def norm_2(self) :
 		return self.scalar_product(self)
 		
 	def normalized(self) :
-		n = self.norm
-		return Vector(self.x / n, self.y / n, self.z / n, True)
+		if self._is_unit :
+			return self
+		else :
+			n = self.norm
+			return Vector(self.x / n, self.y / n, self.z / n, True)
 
 	def angle_to(self, other) :
-		c = (self * other) / (self.norm * other.norm)
-		return math.acos(c)
+		c = (self * other) / (
+			(1 if self._is_unit else self.norm) *
+			(1 if self._is_unit else other.norm)
+		)
+		try :
+			return math.acos(c)
+		except TypeError :
+			return sympy.acos(c)
 
 	def signed_angle_to(self, other, sign) :
 		c = (self * other) / (self.norm * other.norm)
@@ -108,7 +135,8 @@ class Vector(Point) :
 		return math.copysign( math.acos(c), s )
 
 class Plane() :
-	def __init__(self, director, point) :
+	# define a plane
+	def __init__(self, director, point=None) :
 		self.director = director
 		self.point = point
 
@@ -125,15 +153,15 @@ class Plane() :
 
 		return (n * u) / n.norm
 
-	def is_point_on_plane(self, point) :
+	def is_on_plane(self, point) :
 		""" return True if the point lies on the plane """
 		u = point - self.point
 		n = self.director
 
 		return math.isclose(n * u, 0.0)
 
-
-
+	def project(self, vector) :
+		return vector - ( vector * self.director * self.director )
 
 if __name__ == '__main__' :
 	a = Vector(1.0, 0.0, 0.0)

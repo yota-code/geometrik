@@ -13,9 +13,10 @@ template_svg = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 '''
 
 class _common_Point_Vector() :
-	def __init__(self, x, y) :
+	def __init__(self, x, y, is_unit=False) :
 		self.x = x
 		self.y = y
+		self.is_unit = is_unit
 
 	@property
 	def param(self) :
@@ -34,7 +35,7 @@ class Point(_common_Point_Vector) :
 		return math.sqrt( (self.x - other.x)**2 + (self.y - other.y)**2 )
 
 	def __repr__(self) :
-		return f"Point({self.x:0.3g}, {self.y:0.3g})"
+		return f"Point({self.x:0.4g}, {self.y:0.4g})"
 
 	def projection(self, line: "Line") :
 		op = Vector.from_2_Point(line.b, self)
@@ -45,7 +46,7 @@ class Point(_common_Point_Vector) :
 		return Point(self.x + other.x, self.y + other.y)
 
 	def __sub__(self, other) :
-		return Point(self.x - other.x, self.y - other.y)
+		return Vector(self.x - other.x, self.y - other.y)
 
 	def _to_path(self) :
 		return f"M {self.x:0.3f},{self.y:0.3f}"
@@ -65,6 +66,12 @@ class Vector(_common_Point_Vector) :
 	@property
 	def norm_2(self) :
 		return (self.x)**2 + (self.y)**2
+
+	def direct_qt(self) :
+		return Vector(-self.y, self.x)
+
+	def indirect_qt(self) :
+		return Vector(self.y, -self.x)
 
 	@property
 	def norm(self) :
@@ -98,6 +105,9 @@ class Vector(_common_Point_Vector) :
 
 	def __sub__(self, other) :
 		return Vector(self.x - other.x, self.y - other.y)
+
+	def angle(self, other) :
+		return math.atan2(self @ other, self * other)
 
 class Polyline() :
 	def __init__(self, p_lst) :
