@@ -3,11 +3,9 @@
 import math
 import sympy
 
-import IPython.display
-
-
 class Point() :
 	""" a Point is also a vector initiating at the origin """
+
 	def __init__(self, x, y, z) :
 		self.x = x
 		self.y = y
@@ -33,8 +31,31 @@ class Point() :
 
 	def subs(self, ** nam) :
 		return Point(self.x.subs(nam), self.y.subs(nam), self.z.subs(nam))
+		self.z = z
+
+	@property
+	def as_tuple(self) :
+		return self.x, self.y, self.z
+
+	@staticmethod
+	def origin() :
+		return Point(0.0, 0.0, 0.0)
+
+	def __repr__(self) :
+		try :
+			return f"Point({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
+		except TypeError :
+			s = f"Point({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
+			return s
+
+	def __sub__(self, other) :
+		return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
+
+	def subs(self, ** nam) :
+		return Point(self.x.subs(nam), self.y.subs(nam), self.z.subs(nam))
 
 class Vector(Point) :
+
 	def __init__(self, x, y, z, is_unit=False) :
 		self.x = x
 		self.y = y
@@ -44,6 +65,10 @@ class Vector(Point) :
 
 	def __iter__(self) :
 		return (i for i in (self.x, self.y, self.z))
+
+	@staticmethod
+	def compose(a, b, theta) :
+		return math.cos(theta) * a + math.sin(theta) * b
 				
 	def __add__(self, other) :
 		if isinstance(other, Point) :
@@ -134,45 +159,4 @@ class Vector(Point) :
 		s = (self @ other) * sign
 		return math.copysign( math.acos(c), s )
 
-class Plane() :
-	# define a plane
-	def __init__(self, director, point=None) :
-		self.director = director
-		self.point = point
 
-	@staticmethod
-	def from_three_points(self, o, a, b) :
-		v1 = a - o
-		v2 = b - o
-		v0 = v1 @ v2
-		return Plane(v0, o)
-
-	def distance_to_point(self, point) :
-		u = point - self.point
-		n = self.director
-
-		return (n * u) / n.norm
-
-	def is_on_plane(self, point) :
-		""" return True if the point lies on the plane """
-		u = point - self.point
-		n = self.director
-
-		return math.isclose(n * u, 0.0)
-
-	def project(self, vector) :
-		return vector - ( vector * self.director * self.director )
-
-if __name__ == '__main__' :
-	a = Vector(1.0, 0.0, 0.0)
-	b = Vector(1.0, 1.0, 0.0)
-	print(a + b)
-	print(a * b)
-	print(b * a)
-	print(a @ b)
-	print(b @ a)
-	print(3.0 * b)
-	print(b * 3.0)
-	print(b.normalize())
-
-	
