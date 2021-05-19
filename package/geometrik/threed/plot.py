@@ -25,7 +25,6 @@ class arrow_3d(matplotlib.patches.FancyArrowPatch):
         matplotlib.patches.FancyArrowPatch.draw(self, renderer)
 
 class UnitSpherePlot() :
-
 	def __init__(self) :
 		pass
 
@@ -60,18 +59,16 @@ class UnitSpherePlot() :
 
 		# print(f"{name} = {point_b}")
 		
-		point_a = g3d.Point.origin()
-
 		self.axe.add_artist(arrow_3d(
-			[point_a.x, point_b.x],
-			[point_a.y, point_b.y],
-			[point_a.z, point_b.z],
+			[0.0, point_b.x],
+			[0.0, point_b.y],
+			[0.0, point_b.z],
 			mutation_scale=15, arrowstyle='-|>', color=color, shrinkA=0, shrinkB=0
 		))
 		self.axe.text(
-			(point_a.x + point_b.x)/2,
-			(point_a.y + point_b.y)/2,
-			(point_a.z + point_b.z)/2,
+			point_b.x / 2,
+			point_b.y / 2,
+			point_b.z / 2,
 			name,
 			horizontalalignment='center', verticalalignment='center', fontsize=10, color=color
 		)

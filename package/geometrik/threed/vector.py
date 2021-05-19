@@ -3,21 +3,19 @@
 import math
 import sympy
 
-class Point() :
-	""" a Point is also a vector initiating at the origin """
 
-	def __init__(self, x, y, z) :
+class Vector() :
+
+	def __init__(self, x, y, z, is_unit=False) :
 		self.x = x
 		self.y = y
 		self.z = z
 
+		self._is_unit = is_unit
+
 	@property
 	def as_tuple(self) :
 		return self.x, self.y, self.z
-
-	@staticmethod
-	def origin() :
-		return Point(0.0, 0.0, 0.0)
 
 	def __repr__(self) :
 		try :
@@ -26,42 +24,6 @@ class Point() :
 			s = f"{self.__class__.__name__}({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
 			return s
 
-	def __sub__(self, other) :
-		return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
-
-	def subs(self, ** nam) :
-		return Point(self.x.subs(nam), self.y.subs(nam), self.z.subs(nam))
-		self.z = z
-
-	@property
-	def as_tuple(self) :
-		return self.x, self.y, self.z
-
-	@staticmethod
-	def origin() :
-		return Point(0.0, 0.0, 0.0)
-
-	def __repr__(self) :
-		try :
-			return f"Point({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
-		except TypeError :
-			s = f"Point({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
-			return s
-
-	def __sub__(self, other) :
-		return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
-
-	def subs(self, ** nam) :
-		return Point(self.x.subs(nam), self.y.subs(nam), self.z.subs(nam))
-
-class Vector(Point) :
-
-	def __init__(self, x, y, z, is_unit=False) :
-		self.x = x
-		self.y = y
-		self.z = z
-
-		self._is_unit = is_unit
 
 	def __iter__(self) :
 		return (i for i in (self.x, self.y, self.z))
@@ -77,6 +39,9 @@ class Vector(Point) :
 				self.y + other.y,
 				self.z + other.z
 			)
+	
+	def __sub__(self, other) :
+		return Vector(self.x - other.x, self.y - other.y, self.z - other.z)
 			
 	def __mul__(self, other) :
 		if isinstance(other, Vector) :
@@ -163,3 +128,7 @@ class Vector(Point) :
 		return math.copysign(math.acos(max(-1.0, min(c, 1.0))), s)
 
 
+v_null = Vector(0.0, 0.0, 0.0)
+v_north = Vector(0.0, 0.0, 1.0)
+v_east = Vector(0.0, 1.0, 0.0)
+v_zero = v_east @ v_north
