@@ -21,9 +21,9 @@ class Point() :
 
 	def __repr__(self) :
 		try :
-			return f"Point({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
+			return f"{self.__class__.__name__}({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
 		except TypeError :
-			s = f"Point({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
+			s = f"{self.__class__.__name__}({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
 			return s
 
 	def __sub__(self, other) :
@@ -88,6 +88,9 @@ class Vector(Point) :
 		#	raise ValueError("operation not implemented for this type: {0!r}".format(other))
 			
 	__rmul__ = __mul__
+
+	def __neg__(self) :
+		return Vector(-self.x, -self.y, -self.z)
 	
 	def __truediv__(self, other) :
 		# print("__truediv__({0}, {1})".format(type(self), type(other)))
@@ -150,13 +153,13 @@ class Vector(Point) :
 			(1 if self._is_unit else other.norm)
 		)
 		try :
-			return math.acos(c)
+			return math.acos(max(-1.0, min(c, 1.0)))
 		except TypeError :
 			return sympy.acos(c)
 
 	def signed_angle_to(self, other, sign) :
 		c = (self * other) / (self.norm * other.norm)
 		s = (self @ other) * sign
-		return math.copysign( math.acos(c), s )
+		return math.copysign(math.acos(max(-1.0, min(c, 1.0))), s)
 
 
