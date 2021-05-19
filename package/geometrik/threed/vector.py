@@ -33,7 +33,7 @@ class Vector() :
 		return math.cos(theta) * a + math.sin(theta) * b
 				
 	def __add__(self, other) :
-		if isinstance(other, Point) :
+		if isinstance(other, Vector) :
 			return Vector(
 				self.x + other.x,
 				self.y + other.y,
