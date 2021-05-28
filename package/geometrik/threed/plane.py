@@ -27,13 +27,14 @@ class Plane() :
 	def frame(self, other=None) :
 		""" return a frame where z is oriented toward other:
 
-		* no solution is returned if self and other are colinears
-		* if other is not specified, v_north is used as other
-		* in this case, the frame is not defined at poles
+			* no solution is returned if self and other are colinears
+			* if other is not specified, v_north is used as other
+			* in this case, the frame is not defined at poles
 		
 		"""
 		if other is None :
 			other =g3d.vector.v_north
+
 		x = self.normal
 		y = ( g3d.vector.v_north @ x ).normalized()
 		z = x @ y
