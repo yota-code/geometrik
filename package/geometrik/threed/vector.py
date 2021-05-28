@@ -3,7 +3,6 @@
 import math
 import sympy
 
-
 class Vector() :
 
 	def __init__(self, x, y, z, is_unit=False) :
@@ -23,7 +22,6 @@ class Vector() :
 		except TypeError :
 			s = f"{self.__class__.__name__}({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
 			return s
-
 
 	def __iter__(self) :
 		return (i for i in (self.x, self.y, self.z))
