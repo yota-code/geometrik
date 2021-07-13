@@ -33,7 +33,7 @@ class Plane() :
 		
 		"""
 		if other is None :
-			other =g3d.vector.v_north
+			other = g3d.vector.v_north
 
 		x = self.normal
 		y = ( g3d.vector.v_north @ x ).normalized()
@@ -43,6 +43,7 @@ class Plane() :
 
 	def frame_optimal(self) :
 		""" return an arbitrary frame optimized for numerical errors, the frame can be defined everywhere """
+
 		c_tpl = self.normal.as_tuple
 		c_max = max(range(len(c_tpl)), key=lambda i: c_tpl[i])
 

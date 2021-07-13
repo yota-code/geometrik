@@ -29,6 +29,9 @@ class Vector() :
 	@staticmethod
 	def compose(a, b, theta) :
 		return math.cos(theta) * a + math.sin(theta) * b
+
+	def deviate(self, other, theta) :
+		return math.cos(theta) * self + math.sin(theta) * other
 				
 	def __add__(self, other) :
 		if isinstance(other, Vector) :
@@ -125,8 +128,3 @@ class Vector() :
 		s = (self @ other) * sign
 		return math.copysign(math.acos(max(-1.0, min(c, 1.0))), s)
 
-
-v_null = Vector(0.0, 0.0, 0.0)
-v_north = Vector(0.0, 0.0, 1.0)
-v_east = Vector(0.0, 1.0, 0.0)
-v_zero = v_east @ v_north
