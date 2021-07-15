@@ -113,18 +113,18 @@ class Vector() :
 			n = self.norm
 			return Vector(self.x / n, self.y / n, self.z / n, True)
 
-	def angle_to(self, other) :
-		c = (self * other) / (
-			(1 if self._is_unit else self.norm) *
-			(1 if self._is_unit else other.norm)
-		)
-		try :
-			return math.acos(max(-1.0, min(c, 1.0)))
-		except TypeError :
-			return sympy.acos(c)
-
-	def signed_angle_to(self, other, sign) :
-		c = (self * other) / (self.norm * other.norm)
-		s = (self @ other) * sign
-		return math.copysign(math.acos(max(-1.0, min(c, 1.0))), s)
+	def angle_to(self, other, sign=None) :
+		if sign is None :
+			c = (self * other) / (
+				(1 if self._is_unit else self.norm) *
+				(1 if self._is_unit else other.norm)
+			)
+			try :
+				return math.acos(max(-1.0, min(c, 1.0)))
+			except TypeError :
+				return sympy.acos(c)
+		else :
+			c = (self * other) / (self.norm * other.norm)
+			s = (self @ other) * sign
+			return math.copysign(math.acos(max(-1.0, min(c, 1.0))), s)
 

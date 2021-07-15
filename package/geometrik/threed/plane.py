@@ -44,7 +44,7 @@ class Plane() :
 	def frame_optimal(self) :
 		""" return an arbitrary frame optimized for numerical errors, the frame can be defined everywhere """
 
-		c_tpl = self.normal.as_tuple
+		c_tpl = self.normalized().as_tuple
 		c_max = max(range(len(c_tpl)), key=lambda i: c_tpl[i])
 
 		c_lst = list(c_tpl)
@@ -56,7 +56,7 @@ class Plane() :
 		y_lst = [1.0, 1.0, 1.0]
 		y_lst[c_max] = - num / den
 
-		x = self.normal
+		x = self.normalized()
 		y = g3d.vector.Vector(* y_lst).normalized()
 		z = x @ y
 		return y, z
