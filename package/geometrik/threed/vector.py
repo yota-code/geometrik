@@ -23,6 +23,17 @@ class Vector() :
 			s = f"{self.__class__.__name__}({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
 			return s
 
+	def subs(self, v_map) :
+		v_lst = self.x, self.y, self.z
+		m_lst = list()
+		for v in v_lst :
+			try :
+				v = float(v.subs(v_map))
+			except :
+				pass
+			m_lst.append(v)
+		return Vector(* m_lst)
+
 	def __iter__(self) :
 		return (i for i in (self.x, self.y, self.z))
 

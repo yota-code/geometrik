@@ -9,11 +9,11 @@ import geometrik.threed as g3d
 class Plane() :
 	# define a plane
 	def __init__(self, normal: g3d.vector.Vector, point=None) :
-		self.normal = normal
+		self.normal = normal.normalized()
 
 	def distance(self, point) :
 		u = point - self.point
-		n = self.director
+		n = self.normal
 
 		return (n * u) / n.norm
 
@@ -22,7 +22,7 @@ class Plane() :
 		return math.isclose( self.distance(point), 0.0 )
 
 	def project(self, vector) :
-		return vector - ( vector * self.director * self.director )
+		return vector - ( vector * self.normal * self.normal )
 
 	def frame(self, other=None) :
 		""" return a frame where z is oriented toward other:
@@ -44,7 +44,7 @@ class Plane() :
 	def frame_optimal(self) :
 		""" return an arbitrary frame optimized for numerical errors, the frame can be defined everywhere """
 
-		c_tpl = self.normalized().as_tuple
+		c_tpl = self.normal.as_tuple
 		c_max = max(range(len(c_tpl)), key=lambda i: c_tpl[i])
 
 		c_lst = list(c_tpl)
@@ -56,7 +56,7 @@ class Plane() :
 		y_lst = [1.0, 1.0, 1.0]
 		y_lst[c_max] = - num / den
 
-		x = self.normalized()
+		x = self.normal
 		y = g3d.vector.Vector(* y_lst).normalized()
 		z = x @ y
 		return y, z
