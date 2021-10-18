@@ -139,3 +139,36 @@ class Vector() :
 			s = (self @ other) * sign
 			return math.copysign(math.acos(max(-1.0, min(c, 1.0))), s)
 
+	def frame(self, other=None) :
+		""" return a frame where z is oriented toward other (by default north):
+
+			* no solution is returned if self and other are colinears
+			* if other is not specified, v_north is used as other
+			* in this case, the frame is not defined at poles
+		"""
+
+		if other is None :
+			""" return an arbitrarily oriented frame optimized to reduce numerical errors,
+			the frame can be defined everywhere """
+			c_tpl = self.normal.as_tuple
+			c_max = max(range(len(c_tpl)), key=lambda i: c_tpl[i])
+
+			c_lst = list(c_tpl)
+			c_lst[c_max] = 0
+
+			num = sum(c_lst)
+			den = c_tpl[c_max]
+
+			y_lst = [1.0, 1.0, 1.0]
+			y_lst[c_max] = - num / den
+
+			x = self.normal
+			y = Vector(* y_lst).normalized()
+			z = x @ y
+
+		else :
+			x = self
+			y = (other @ x).normalized()
+			z = x @ y
+
+		return y, z
