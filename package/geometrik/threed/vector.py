@@ -16,6 +16,11 @@ class Vector() :
 	def as_tuple(self) :
 		return self.x, self.y, self.z
 
+	@staticmethod
+	def symbolic(name) :
+		Vx, Vy, Vz = sympy.symbols(' '.join(f'{name}_{i}' for i in 'xyz'))
+		return Vector(Vx, Vy, Vz)
+
 	def __repr__(self) :
 		try :
 			return f"{self.__class__.__name__}({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
