@@ -129,6 +129,9 @@ class Vector() :
 			n = self.norm
 			return Vector(self.x / n, self.y / n, self.z / n, True)
 
+	def atan2(self, Fx, Fy) :
+		return math.atan2(Fy * self, Fx * self)
+
 	def angle_to(self, other, sign=None) :
 		if sign is None :
 			c = (self * other) / (
