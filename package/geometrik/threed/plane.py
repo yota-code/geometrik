@@ -19,8 +19,6 @@ class Plane() :
 		""" return True if the point lies on the plane """
 		return math.isclose( self.distance(point), 0.0 )
 
-	def project(self, vector) :
-		return vector - ( (vector * self.normal) * self.normal )
 
 	def frame(self, other=g3d.Vector(0.0, 0.0, 1.0, True)) :
 		""" return a frame where z is oriented toward other (by default north):

@@ -180,3 +180,6 @@ class Vector() :
 			z = x @ y
 
 		return y, z
+
+	def project(self, normal) :
+		return self - ( (self * normal) * normal )
