@@ -129,7 +129,7 @@ class Vector() :
 			n = self.norm
 			return Vector(self.x / n, self.y / n, self.z / n, True)
 
-	def atan2(self, Fx, Fy) :
+	def atan2(self, Fy, Fx) :
 		return math.atan2(Fy * self, Fx * self)
 
 	def angle_to(self, other, sign=None) :
@@ -179,7 +179,7 @@ class Vector() :
 			y = (other @ x).normalized()
 			z = x @ y
 
-		return y, z
+		return y, z # east, north
 
 	def project(self, normal) :
 		return self - ( (self * normal) * normal )
