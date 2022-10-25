@@ -30,15 +30,19 @@ class Vector() :
 		return f"{self.__class__.__name__}({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
 
 	def subs(self, v_map) :
+		if not self._is_symbolic :
+			raise NotImplementedError
 		v_lst = self.x, self.y, self.z
 		m_lst = list()
+		is_symbolic = False
 		for v in v_lst :
+			v = v.subs(v_map)
 			try :
-				v = float(v.subs(v_map))
-			except :
-				pass
+				v = float(v)
+			except TypeError : # can not convert to float directly, there is still some bit a sympy inside
+				is_symbolic = True
 			m_lst.append(v)
-		return Vector(* m_lst)
+		return Vector(* m_lst, is_symbolic=is_symbolic)
 
 	def __iter__(self) :
 		return (i for i in (self.x, self.y, self.z))
@@ -173,6 +177,7 @@ class Vector() :
 			return cc
 
 	def frame(self, other=None) :
+		# TODO, migrer dans globe parce que ça a pas de sens ici ?
 		""" return a frame where z is oriented toward other (by default north):
 
 			* no solution is returned if self and other are colinears
@@ -211,6 +216,37 @@ class Vector() :
 
 	def project_tangent(self, tangent) :
 		return ((self * tangent) / (tangent.norm_2)) * tangent
+
+	def rotate(self, axis, alpha) :
+		# rotation via le produit triple
+		# https://math.stackexchange.com/questions/4277293/finding-vec-b-from-vec-a-times-vec-b-vec-a-and-alpha-angle-vec
+		# c'est tellement overkill !!!
+
+		M = axis.normalized()
+
+		An = self.project_normal(M)
+		At = self.project_tangent(M)
+
+		AxB = M * An.norm_2 * self.m.sin(alpha)
+		Bn = (An * (AxB.norm * (1 / self.m.tan(alpha))) - (An @ AxB) ) * (1 / An.norm_2)
+		# Bt = At
+
+		return Bn + At
+
+	def rotate(self, axis, alpha=None) :
+
+		if alpha is None and self._is_symbolic :
+			alpha = sympy.Symbol('alpha')
+	
+		M = axis.normalized()
+
+		An = self.project_normal(M)
+		At = self.project_tangent(M)
+
+		Bn = An.deflect(An @ M, alpha)
+
+		return Bn + At
+
 
 import numpy as np
 import matplotlib.pyplot as plt
