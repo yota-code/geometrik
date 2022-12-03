@@ -30,17 +30,19 @@ class Vector() :
 		return f"{self.__class__.__name__}({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
 
 	def subs(self, v_map) :
-		if not self._is_symbolic :
-			raise NotImplementedError
+		# if not self._is_symbolic :
+		# 	raise NotImplementedError
 		v_lst = self.x, self.y, self.z
 		m_lst = list()
 		is_symbolic = False
 		for v in v_lst :
-			v = v.subs(v_map)
 			try :
-				v = float(v)
-			except TypeError : # can not convert to float directly, there is still some bit a sympy inside
-				is_symbolic = True
+				v = v.subs(v_map)
+			except AttributeError :
+				try :
+					v = float(v)
+				except TypeError : # can not convert to float directly, there is still some bit a sympy inside
+					is_symbolic = True
 			m_lst.append(v)
 		return Vector(* m_lst, is_symbolic=is_symbolic)
 
@@ -162,17 +164,19 @@ class Vector() :
 		ca = (self * other) / (self.norm * other.norm)
 
 		# if the result is numeric, cap it in [-1.0 ; 1.0] for the acos to come
-		cb = max(-1.0, min(ca, 1.0)) if not ca._is_symbolic else ca
+		try :
+			cb = max(-1.0, min(float(ca), 1.0))
+		except TypeError :
+			cb = ca
 
 		# last arccos
 		cc = self.m.acos(cb)
-
-		if way is None :
+		if way is not None :
 			s = (self @ other) * way
-			if cc._is_symbolic :
-				return sympy.sign(s) * cc
-			else :
-				return math.copysign(cc, s)
+			try :
+				return math.copysign(float(cc), float(s))
+			except TypeError :
+				return sympy.sign(s) * cc				
 		else :
 			return cc
 
