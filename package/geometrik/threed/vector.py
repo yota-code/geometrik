@@ -1,50 +1,41 @@
 #!/usr/bin/env python3
 
 import math
+import numbers
+
+from operator import is_
 import sympy
 
 class Vector() :
 
-	def __init__(self, x, y, z, is_unit=False, is_symbolic=False) :
+	def __init__(self, x, y, z, is_unit=False) :
+
 		self.x = x
 		self.y = y
 		self.z = z
 
 		self._is_unit = is_unit
 
-		self._is_symbolic = is_symbolic
-		self.m = sympy if is_symbolic else math
+		self._is_symbolic = self.is_symbolic
+		self.m = sympy if self._is_symbolic else math
+
+	@property
+	def is_symbolic(self) :
+		return not all(isinstance(i, numbers.Number) for i in self.as_tuple)
 
 	@property
 	def as_tuple(self) :
 		return self.x, self.y, self.z
 
 	@staticmethod
-	def symbolic(name) :
+	def new_symbolic(name) :
 		Vx, Vy, Vz = sympy.symbols(' '.join(f'{name}_{i}' for i in 'xyz'))
-		return Vector(Vx, Vy, Vz, is_symbolic=name)
+		return Vector(Vx, Vy, Vz)
 
 	def __repr__(self) :
 		if self._is_symbolic :
 			return f"{self.__class__.__name__}({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
 		return f"{self.__class__.__name__}({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
-
-	def subs(self, v_map) :
-		# if not self._is_symbolic :
-		# 	raise NotImplementedError
-		v_lst = self.x, self.y, self.z
-		m_lst = list()
-		is_symbolic = False
-		for v in v_lst :
-			try :
-				v = v.subs(v_map)
-			except AttributeError :
-				try :
-					v = float(v)
-				except TypeError : # can not convert to float directly, there is still some bit a sympy inside
-					is_symbolic = True
-			m_lst.append(v)
-		return Vector(* m_lst, is_symbolic=is_symbolic)
 
 	def __iter__(self) :
 		return (i for i in (self.x, self.y, self.z))
@@ -57,7 +48,6 @@ class Vector() :
 			self.x + other.x,
 			self.y + other.y,
 			self.z + other.z,
-			is_symbolic = self._is_symbolic or other._is_symbolic
 		)
 	
 	def __sub__(self, other) :
@@ -79,7 +69,6 @@ class Vector() :
 			-self.x,
 			-self.y,
 			-self.z,
-			is_symbolic = self._is_symbolic
 		)
 	
 	def __truediv__(self, other) :
@@ -106,7 +95,6 @@ class Vector() :
 			k * self.x,
 			k * self.y,
 			k * self.z,
-			is_symbolic = self._is_symbolic
 		)
 				
 	def scalar_product(self, other) :
@@ -119,7 +107,6 @@ class Vector() :
 			self.y * other.z - self.z * other.y,
 			self.z * other.x - self.x * other.z,
 			self.x * other.y - self.y * other.x,
-			is_symbolic = self._is_symbolic or other._is_symbolic
 		)
 		
 	def __str__(self) :
@@ -146,6 +133,9 @@ class Vector() :
 			return self.scalar_product(self)
 		
 	def normalized(self) :
+		if self._is_unit :
+			return self
+
 		n = self.norm
 
 		return Vector(
@@ -153,7 +143,6 @@ class Vector() :
 			self.y / n,
 			self.z / n,
 			is_unit=True,
-			is_symbolic=self._is_symbolic
 		)
 
 	def atan2(self, Fy, Fx) :
@@ -179,6 +168,23 @@ class Vector() :
 				return sympy.sign(s) * cc				
 		else :
 			return cc
+
+	def oriented_frame(self, heading) : # in radians
+		Fn, Fe = self.northeast_frame()
+
+		Fx = Fn.deflect(Fe, heading)
+		Fy = Fx @ self.normalized()
+		
+		return Fx, Fy
+
+	
+	def northeast_frame(self) :
+		Ez = Vector(0, 0, 1)
+
+		Fe = (Ez @ self).normalized()
+		Fn = self.normalized() @ Fe
+
+		return Fn, Fe
 
 	def frame(self, other=None) :
 		# TODO, migrer dans globe parce que ça a pas de sens ici ?
@@ -251,6 +257,31 @@ class Vector() :
 
 		return Bn + At
 
+	def subs(self, v_map) :
+		# if not self._is_symbolic :
+		# 	raise NotImplementedError
+		v_lst = self.x, self.y, self.z
+		m_lst = list()
+		is_symbolic = False
+		for v in v_lst :
+			try :
+				v = v.subs(v_map)
+			except AttributeError :
+				try :
+					v = float(v)
+				except TypeError : # can not convert to float directly, there is still some bit a sympy inside
+					is_symbolic = True
+			m_lst.append(v)
+		return Vector(* m_lst)
+
+	def res(self, v_map) :
+		return Vector(* [
+			( i if isinstance(i, numbers.Number) else float(i.subs(v_map)) )
+			for i in self.as_tuple
+		])
+
+	def simplify(self) :
+		return Vector(* [v.simplify() for v in self.as_tuple], is_symbolic=True)
 
 import numpy as np
 import matplotlib.pyplot as plt
