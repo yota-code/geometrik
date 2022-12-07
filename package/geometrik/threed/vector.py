@@ -169,13 +169,13 @@ class Vector() :
 		else :
 			return cc
 
-	def oriented_frame(self, heading) : # in radians
+	def oriented_frame(self, heading, w=1) : # in radians
 		Fn, Fe = self.northeast_frame()
 
 		Fx = Fn.deflect(Fe, heading)
 		Fy = Fx @ self.normalized()
 		
-		return Fx, Fy
+		return Fx, w*Fy
 
 	
 	def northeast_frame(self) :
