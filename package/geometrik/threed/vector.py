@@ -8,7 +8,7 @@ import sympy
 
 class Vector() :
 
-	def __init__(self, x, y, z, is_unit=False) :
+	def __init__(self, x=0.0, y=0.0, z=0.0, is_unit=False) :
 
 		self.x = x
 		self.y = y
@@ -20,8 +20,12 @@ class Vector() :
 		self.m = sympy if self._is_symbolic else math
 
 	@property
+	def as_vector(self) :
+		return self
+
+	@property
 	def is_symbolic(self) :
-		return not all(isinstance(i, numbers.Number) for i in self.as_tuple)
+		return not all(isinstance(i, numbers.Number) for i in self)
 
 	@property
 	def as_tuple(self) :
@@ -38,10 +42,12 @@ class Vector() :
 		return f"{self.__class__.__name__}({self.x:0.3g}, {self.y:0.3g}, {self.z:0.3g})"
 
 	def __iter__(self) :
-		return (i for i in (self.x, self.y, self.z))
+		return (i for i in self.as_tuple)
 
 	def deflect(self, other, theta) :
-		return self.m.cos(theta) * self + self.m.sin(theta) * other
+		u = self.m.cos(theta) * self + self.m.sin(theta) * other
+		u._is_unit = self._is_unit and other._is_unit
+		return u
 				
 	def __add__(self, other) :
 		return Vector(
@@ -70,6 +76,9 @@ class Vector() :
 			-self.y,
 			-self.z,
 		)
+
+	def __eq__(self, other) :
+		return math.isclose(self.x, other.x) and math.isclose(self.y, other.y) and math.isclose(self.z, other.z)
 	
 	def __truediv__(self, other) :
 		# print("__truediv__({0}, {1})".format(type(self), type(other)))
@@ -301,7 +310,6 @@ class arrow_3d(matplotlib.patches.FancyArrowPatch):
 		xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, self.axes.M)
 		self.set_positions((xs[0],ys[0]),(xs[1],ys[1]))
 		return np.min(zs)
-
 
 class VectorPlot() :
 	def __init__(self, pth=None) :
