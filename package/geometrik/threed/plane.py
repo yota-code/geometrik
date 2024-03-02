@@ -6,19 +6,22 @@ import sympy
 
 import geometrik.threed as g3d
 
-class Plane() :
+class PlaneN() :
 
-	# define a plane which pass through the point (0, 0), defined by its normal vector
-	def __init__(self, normal: g3d.Vector) :
+	# a plane which pass through (0, 0, 0)
+	def __init__(self, normal:g3d.Vector, origin:g3d.Vector=g3d.Vector(0, 0, 0)) :
 		self.normal = normal.normalized()
+		self.origin = origin
 
 	def distance(self, point: g3d.Vector) :
-		return (self.normal * point) / self.normal.norm
+		return (self.normal * (point - self.origin))
 
 	def is_on_plane(self, point) :
 		""" return True if the point lies on the plane """
-		return math.isclose( self.distance(point), 0.0 )
-
+		return math.isclose(self.distance(point), 0.0)
+	
+	def projection(self, point) :
+		pass
 
 	def frame(self, other=g3d.Vector(0.0, 0.0, 1.0, True)) :
 		""" return a frame where z is oriented toward other (by default north):
@@ -53,6 +56,9 @@ class Plane() :
 			z = x @ y
 
 		return y, z
+	
+
+class PlaneUV
 		
 # class GenericPlane() :
 # 	def __init__(self, normal, point=None) :
