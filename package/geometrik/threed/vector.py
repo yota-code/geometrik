@@ -160,7 +160,7 @@ class Vector() :
 		# part of the formula for the angle between two vectors
 		ca = (self * other) / (self.norm * other.norm)
 
-		# if the result is numeric, cap it in [-1.0 ; 1.0] for the acos to come
+		# if the result is numeric, cap it in [-1.0 ; 1.0] for the acos
 		try :
 			cb = max(-1.0, min(float(ca), 1.0))
 		except TypeError :

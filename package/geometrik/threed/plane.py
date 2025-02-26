@@ -57,8 +57,10 @@ class PlaneN() :
 
 		return y, z
 	
+Plane = PlaneN
 
-class PlaneUV
+class PlaneUV :
+	pass
 		
 # class GenericPlane() :
 # 	def __init__(self, normal, point=None) :
