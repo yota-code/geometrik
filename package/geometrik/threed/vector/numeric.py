@@ -2,15 +2,12 @@
 
 import math
 
-from geometric.treed.vector.base import Vector
+from geometrik.threed.vector.base import Vector
 
 
 class NumVector(Vector):
+	__slots__ = ()
 	m = math
-
-	def __init__(self, x, y, z, is_unit=False):
-		self.x, self.y, self.z = x, y, z
-		self._is_unit = is_unit
 
 	@property
 	def norm(self):

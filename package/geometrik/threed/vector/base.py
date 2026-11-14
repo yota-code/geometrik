@@ -3,27 +3,28 @@
 from dataclasses import dataclass
 from typing import Literal
 
-import sympy
-
-from geometrik.threed.vector.numeric import NumVector
-from geometrik.threed.vector.symbolic import SymVector
-
 Way = Literal[-1, 1]
 
 
-@dataclass(slots=True)
-class Vector:
-	x: float | sympy.Expr
-	y: float | sympy.Expr
-	z: float | sympy.Expr
+def Vector(*args, is_unit=False):
+	if len(args) == 3 and all(isinstance(a, (int, float)) for a in args):
+		from geometrik.threed.vector.numeric import NumVector
 
-	def __new__(cls, *args):
-		if len(args) == 3:
-			return object.__new__(NumVector)
-		elif len(args) == 1 and isinstance(args[0], str):
-			return object.__new__(SymVector)
+		return NumVector(*args, is_unit=is_unit)
 
-		raise TypeError("Constructeur invalide")
+	from geometrik.threed.vector.symbolic import SymVector
+
+	if len(args) == 1 and isinstance(args[0], str):
+		return SymVector.symbol(args[0], is_unit=is_unit)
+	if len(args) == 3:
+		return SymVector(*args, is_unit=is_unit)
+
+	raise TypeError("Constructeur invalide")
+
+
+@dataclass
+class BaseVector:
+	__slots__ = ("_is_unit", "x", "y", "z")
 
 	def __iter__(self):
 		yield self.x
@@ -40,12 +41,14 @@ class Vector:
 	@property
 	def as_tuple(self):
 		return tuple(self)
+		return (self.x, self.y, self.z)
 
 	@property
 	def as_list(self):
 		return list(self)
 
 	def __add__(self, other):
+		print("ADD", self.__class__, other.__class__)
 		return self.__class__(
 			self.x + other.x,
 			self.y + other.y,
@@ -86,16 +89,17 @@ class Vector:
 		if isinstance(other, Vector):
 			return self.vector_product(other)
 		else:
-			raise ValueError(f"operation not implemented for this type: {other!r}")
+			raise TypeError(f"operation not implemented for this type: {other!r}")
 
 	def atan2(self, Fy, Fx):
 		return self.m.atan2(Fy * self, Fx * self)
 
 	def northeast_frame(self):
-		"""Return a north east frame.
-		* The origin is given by the vector itself,
-		* the Fe point toward the east
-		* the Fn point toward the north"""
+		"""Return a local north east frame.
+		* The origin is given by the vector _self_,
+		* Fn point toward the north
+		* Fe point toward the east"""
+
 		Ez = Vector(0, 0, 1)
 
 		Fe = (Ez @ self).normalized()
@@ -104,7 +108,7 @@ class Vector:
 		return Fn, Fe
 
 	def oriented_frame(self, heading: float, w: Way = 1):
-		"""Return a nort east frame rotated with a given heading."""
+		"""Return a north east frame rotated with a given heading."""
 		Fn, Fe = self.northeast_frame()
 
 		Fx = Fn.deflect(Fe, heading)

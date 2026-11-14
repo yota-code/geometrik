@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from geometrik.threed.vector import Vector, VectorPlot
-from geometrik.threed.plane import Plane
+# from geometrik.threed.plane import Plane
+from geometrik.threed.vector import Vector
 
 v_null = Vector(0.0, 0.0, 0.0, True)
 v_north = Vector(0.0, 0.0, 1.0, True)
