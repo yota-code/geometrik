@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 
 import math
+from dataclasses import dataclass
 
-from geometrik.threed.vector.base import Vector
+from geometrik.threed.vector.base import BaseVector
 
 
-class NumVector(Vector):
+@dataclass(slots=True)
+class NumVector(BaseVector):
 	__slots__ = ()
-	m = math
 
 	@property
 	def norm(self):
-		if self._is_unit:
+		if self.is_unit:
 			return 1.0
 
 		return math.hypot(*self)
 
 	@property
 	def norm_2(self):
-		if self._is_unit:
+		if self.is_unit:
 			return 1.0
 		else:
 			return self.scalar_product(self)
@@ -34,7 +35,7 @@ class NumVector(Vector):
 		)
 
 	def normalized(self, tol: float = 1e-15):
-		if self._is_unit:
+		if self.is_unit:
 			return self
 
 		n = self.norm
@@ -51,16 +52,22 @@ class NumVector(Vector):
 		)
 
 	def angle_to(self, other, way=None):
+		"""Calcule l'angle (en radians) entre `self` et `other`.
+
+		Si `way` est fourni, retourne l'angle orienté dans [-pi, pi] selon le
+		signe du produit mixte `(self @ other) * way`. Sinon, retourne l'angle
+		non orienté dans [0, pi].
+		"""
 		ca = (self * other) / (self.norm * other.norm)
 
 		# cap the result in [-1.0 ; 1.0] for the acos
-		cb = max(-1.0, min(float(ca), 1.0))
+		cb = max(-1.0, min(ca, 1.0))
 
 		# last arccos
-		cc = self.m.acos(cb)
+		cc = math.acos(cb)
 		if way is not None:
 			s = (self @ other) * way
-			return self.m.copysign(cc, s)
+			return math.copysign(cc, s)
 		else:
 			return cc
 
@@ -90,3 +97,10 @@ class NumVector(Vector):
 		z = x @ y
 
 		return y, z  # east, north
+
+
+v_null = NumVector(0.0, 0.0, 0.0, True)
+v_north = NumVector(0.0, 0.0, 1.0, True)
+v_east = NumVector(0.0, 1.0, 0.0, True)
+v_down = v_north @ v_east
+v_up = v_east @ v_north

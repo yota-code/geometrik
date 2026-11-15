@@ -1,42 +1,38 @@
 #!/usr/bin/env python3
 
+from dataclasses import dataclass
+
 import sympy
 
-from geometrik.threed.vector.base import Vector
+from geometrik.threed.vector.base import BaseVector
 
 
-class SymVector(Vector):
-	__slots__ = ()
-	m = sympy
-
-	# def __init__(self, name, is_unit=False):
-	# 	self.x, self.y, self.z = self.m.symbols(" ".join(f"{name}_{i}" for i in "xyz"))
-	# 	self._is_unit = is_unit
-
+@dataclass(slots=True)
+class SymVector(BaseVector):
 	@classmethod
 	def symbol(cls, name: str, is_unit: bool = False):
 		x, y, z = sympy.symbols(f"{name}_x {name}_y {name}_z")
 		return cls(x, y, z, is_unit=is_unit)
 
 	def __repr__(self):
-		return f"{self.__class__.__name__}({self.m.latex(self.x)}, {self.m.latex(self.y)}, {self.m.latex(self.z)})"
+		return f"{self.__class__.__name__}({sympy.latex(self.x)}, {sympy.latex(self.y)}, {sympy.latex(self.z)})"
 
 	@property
 	def norm_2(self):
-		if self._is_unit:
+		if self.is_unit:
 			return 1
 		else:
 			return self.scalar_product(self)
 
 	@property
 	def norm(self):
-		if self._is_unit:
+		if self.is_unit:
 			return 1
 		else:
-			return self.m.sqrt(self.norm_2)
+			return sympy.sqrt(self.norm_2)
 
 	def normalized(self, tol: float = 1e-15):
-		if self._is_unit:
+		if self.is_unit:
 			return self
 
 		n = self.norm
@@ -66,9 +62,16 @@ class SymVector(Vector):
 			cb = ca
 
 		# last arccos
-		cc = self.m.acos(cb)
+		cc = sympy.acos(cb)
 		if way is not None:
 			s = (self @ other) * way
-			return self.m.sign(s) * cc
+			return sympy.sign(s) * cc
 		else:
 			return cc
+
+
+v_null = SymVector(0, 0, 0, True)
+v_north = SymVector(0, 0, 1, True)
+v_east = SymVector(0, 1, 0, True)
+v_down = v_north @ v_east
+v_up = v_east @ v_north

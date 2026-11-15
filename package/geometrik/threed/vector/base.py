@@ -6,25 +6,12 @@ from typing import Literal
 Way = Literal[-1, 1]
 
 
-def Vector(*args, is_unit=False):
-	if len(args) == 3 and all(isinstance(a, (int, float)) for a in args):
-		from geometrik.threed.vector.numeric import NumVector
-
-		return NumVector(*args, is_unit=is_unit)
-
-	from geometrik.threed.vector.symbolic import SymVector
-
-	if len(args) == 1 and isinstance(args[0], str):
-		return SymVector.symbol(args[0], is_unit=is_unit)
-	if len(args) == 3:
-		return SymVector(*args, is_unit=is_unit)
-
-	raise TypeError("Constructeur invalide")
-
-
-@dataclass
+@dataclass(slots=True)
 class BaseVector:
-	__slots__ = ("_is_unit", "x", "y", "z")
+	x: float = 0
+	y: float = 0
+	z: float = 0
+	is_unit: bool = None
 
 	def __iter__(self):
 		yield self.x
@@ -86,7 +73,7 @@ class BaseVector:
 		)
 
 	def __matmul__(self, other):
-		if isinstance(other, Vector):
+		if isinstance(other, BaseVector):
 			return self.vector_product(other)
 		else:
 			raise TypeError(f"operation not implemented for this type: {other!r}")
@@ -100,7 +87,7 @@ class BaseVector:
 		* Fn point toward the north
 		* Fe point toward the east"""
 
-		Ez = Vector(0, 0, 1)
+		Ez = self.__class__(0, 0, 1)
 
 		Fe = (Ez @ self).normalized()
 		Fn = self.normalized() @ Fe
