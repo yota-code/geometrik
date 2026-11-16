@@ -72,6 +72,15 @@ class BaseVector:
 			self.x * other.y - self.y * other.x,
 		)
 
+	def __mul__(self, other):
+		if isinstance(other, BaseVector):
+			return self.scalar_product(other)
+		# elif isinstance(other, (int, float, sympy.core.symbol.Symbol,)) :
+		# 	return self.lambda_product(other)
+		else:
+			return self.lambda_product(other)
+		# 	raise ValueError("operation not implemented for this type: {0!r}".format(other))
+
 	def __matmul__(self, other):
 		if isinstance(other, BaseVector):
 			return self.vector_product(other)

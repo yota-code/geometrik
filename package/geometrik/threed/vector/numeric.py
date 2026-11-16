@@ -8,8 +8,6 @@ from geometrik.threed.vector.base import BaseVector
 
 @dataclass(slots=True)
 class NumVector(BaseVector):
-	__slots__ = ()
-
 	@property
 	def norm(self):
 		if self.is_unit:
