@@ -55,6 +55,8 @@ class InteractiveSpherePV:
 		self.meshes["angle_uw"] = pv.PolyData()
 		self.meshes["angle_vw"] = pv.PolyData()
 
+		self.update()
+
 		self.plotter.add_mesh(
 			self.meshes["u"], color="#EF553B", smooth_shading=True, label="U"
 		)
@@ -67,8 +69,6 @@ class InteractiveSpherePV:
 		self.plotter.add_mesh(self.meshes["angle_uw"], color="#EF553B", line_width=3)
 		self.plotter.add_mesh(self.meshes["angle_vw"], color="#00CC96", line_width=3)
 		self.plotter.add_legend(bcolor="white", face="circle")
-
-		self.update()
 
 	def update(self):
 		u = self._sph_to_cart(self.angles["theta_u"], self.angles["phi_u"])
@@ -111,6 +111,7 @@ class InteractiveSpherePV:
 				title_height=0.02,
 				tube_width=0.004,
 				slider_width=0.015,
+				interaction_event="always",
 			)
 
 	def show(self):
